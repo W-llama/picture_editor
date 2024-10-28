@@ -1,0 +1,38 @@
+# 가상 환경 디렉토리
+.venv/
+env/
+venv/
+
+# 컴파일된 Python 파일
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# 설정 및 환경 파일 (민감한 정보 포함 가능)
+*.env
+instance/
+config.py
+
+# 에디터 및 IDE 관련 파일 (PyCharm, VSCode 등)
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 로그 파일 및 데이터베이스 파일
+*.log
+*.sqlite3
+*.db
+
+# 마이그레이션 버전 파일 (원하면 포함하지 않도록)
+migrations/versions/
+
+# 배포 및 빌드 파일
+*.egg-info/
+dist/
+build/
+
+# 운영체제별 임시 파일
+.DS_Store
+Thumbs.db
