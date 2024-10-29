@@ -76,6 +76,6 @@ http://localhost:5000/api/remove-background
  
 ## 📜 **라이센스**
 
-이 프로젝트는 [BiRefNet](https://github.com/ZhengPeng7/BiRefNet)의 라이센스를 따릅니다.
+이 프로젝트는 [BiRefNet](https://github.com/ZhengPeng7/BiRefNet)의 라이센스를 따릅니다. 라이센스 파일은 프로젝트 루트 디렉토리에 포함되어 있습니다.
 BiRefNet의 라이센스는 [MIT 라이센스](https://opensource.org/licenses/MIT) 하에 배포됩니다.
 
