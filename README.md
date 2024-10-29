@@ -55,7 +55,7 @@ pip install -r requirements.txt
 FAL_KEY=your_fal_api_key_here
 ```
 
-API 키는 FAL 공식 웹사이트에서 발급받을 수 있습니다.
+API 키는 [FAL](https://fal.ai/dashboard/keys) 공식 웹사이트에서 발급받을 수 있습니다.
 
 ### 5. Flask 서버 실행
 ```bash
