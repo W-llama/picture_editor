@@ -1,69 +1,70 @@
-import requests
-from fal_client import SyncClient
 import os
-from uuid import uuid4  # 고유한 파일 이름 생성용
-from pathlib import Path
-import base64
+import numpy as np
+import torch
+from PIL import Image, ImageOps
+from torchvision import transforms
+from diffusers import StableDiffusionPipeline
+from model import U2NET  # U2Net 모델 정의 파일 필요
 
-def remove_background_with_removebg(image_bytes: bytes, api_key: str) -> str:
-    """remove.bg API를 사용해 이미지의 배경을 제거하고 파일 경로를 반환합니다."""
-    try:
-        response = requests.post(
-            "https://api.remove.bg/v1.0/removebg",
-            files={"image_file": ("image.png", image_bytes)},
-            data={"size": "auto"},
-            headers={"X-Api-Key": api_key},
-        )
-        if response.status_code == 200:
-            # 고유한 파일 이름 생성
-            file_name = f"{uuid4()}.png"
-            output_path = Path("static") / file_name
-            output_path.parent.mkdir(exist_ok=True)  # static 디렉터리 생성
+# U2Net 모델 로드
+model_path = "save_models/u2net.pth"
+u2net_model = U2NET(3, 1)  # U2Net 모델 객체 생성
+u2net_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+u2net_model.eval()
 
-            # 이미지 저장
-            with open(output_path, "wb") as f:
-                f.write(response.content)
+# Dreambooth 모델 경로 설정
+dreambooth_model_path = "save_models/dreambooth_model"
+model_name = "CompVis/stable-diffusion-v1-4"
 
-            # 경로 반환
-            return f"/static/{file_name}"
-        else:
-            print(f"remove.bg API error: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        print(f"Exception in remove.bg: {str(e)}")
-        return None
+# Dreambooth 모델 로드 또는 다운로드
+if not os.path.exists(dreambooth_model_path):
+    print("Downloading Dreambooth model...")
+    pipeline = StableDiffusionPipeline.from_pretrained(model_name)
+    pipeline.save_pretrained(dreambooth_model_path)
+    print("Model downloaded and saved to", dreambooth_model_path)
+else:
+    print("Loading Dreambooth model from local path...")
 
-def create_ai_image_with_fal(image_bytes: bytes, prompt: str, api_key: str) -> str:
-    """FAL API를 사용해 AI 이미지를 생성하고 Base64로 반환합니다."""
-    try:
-        # SyncClient 인스턴스 생성
-        client = SyncClient()
+# Dreambooth 파이프라인 로드
+dreambooth_pipeline = StableDiffusionPipeline.from_pretrained(dreambooth_model_path)
+dreambooth_pipeline.to("cpu")  # GPU 사용 시 "cuda"로 변경 가능
 
-        # 이미지 데이터를 Base64로 인코딩
-        encoded_image = base64.b64encode(image_bytes).decode('utf-8')
+# 이미지 전처리 함수
+def preprocess_image(image):
+    transform = transforms.Compose([
+        transforms.Resize((320, 320)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    image = transform(image).unsqueeze(0)
+    return image
 
-        print(f"Encoded image size: {len(encoded_image)}")  # 디버깅용 로그
+# 후처리 함수
+def postprocess_mask(mask, original_size):
+    mask = mask.squeeze().cpu().detach().numpy()
+    mask = (mask > 0.5).astype(np.uint8) * 255
+    mask = Image.fromarray(mask).resize(original_size, Image.LANCZOS)
+    return mask
 
-        # API 호출
-        handler = client.submit(
-            "fal-ai/lora",
-            arguments={
-                "model_name": "stabilityai/stable-diffusion-xl-base-1.0",
-                "prompt": prompt,
-                "image": encoded_image
-            },
-        )
+# U2Net을 통한 배경 제거 (투명 배경)
+def remove_background(image):
+    pil_image = Image.open(image).convert("RGB")
+    original_size = pil_image.size
+    input_image = preprocess_image(pil_image)
 
-        # 응답 받기
-        result = handler.get()
-        print(f"FAL API result: {result}")  # 결과 디버깅용
+    with torch.no_grad():
+        prediction = u2net_model(input_image)[0][:, 0, :, :]
+        mask = postprocess_mask(prediction, original_size)
 
-        if not result:
-            print("FAL API returned empty result.")
-            return None
+    # 투명한 배경 생성
+    rgba_image = pil_image.convert("RGBA")
+    data = np.array(rgba_image)
+    data[:, :, 3] = mask  # 알파 채널에 마스크 적용해 투명도 설정
+    transparent_image = Image.fromarray(data, "RGBA")
+    return transparent_image, mask  # 투명 배경 이미지 반환
 
-        return result
-
-    except Exception as e:
-        print(f"Exception in create_ai_image_with_fal: {str(e)}")
-        return None
+# Dreambooth를 통한 배경 생성
+def generate_background(prompt, size=(512, 512)):
+    width, height = map(int, size)  # size 값을 정수로 변환하여 height와 width에 전달
+    generated_image = dreambooth_pipeline(prompt, height=height, width=width).images[0]
+    return generated_image

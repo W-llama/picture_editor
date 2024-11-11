@@ -5,7 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="11c405e3-de00-48f6-bf20-a0a71a1ee95f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/error_handler.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,6 +22,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Flask Main" />
+        <option value="Dockerfile" />
         <option value="Python Script" />
       </list>
     </option>
@@ -63,6 +70,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/tmdqj/Desktop/project/dreambooth&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -110,7 +118,26 @@
       <workItem from="1730206172935" duration="1711000" />
       <workItem from="1730208043457" duration="1235000" />
       <workItem from="1730211602766" duration="12000" />
-      <workItem from="1730249867514" duration="6929000" />
+      <workItem from="1730249867514" duration="9108000" />
+      <workItem from="1730262551056" duration="803000" />
+      <workItem from="1730263501614" duration="986000" />
+      <workItem from="1730266214158" duration="19000" />
+      <workItem from="1730266251277" duration="18000" />
+      <workItem from="1730275748547" duration="39000" />
+      <workItem from="1730336138691" duration="9020000" />
+      <workItem from="1730421844904" duration="550000" />
+      <workItem from="1730424147792" duration="1295000" />
+      <workItem from="1730681806498" duration="4672000" />
+      <workItem from="1730768380501" duration="972000" />
+      <workItem from="1730773145148" duration="2410000" />
+      <workItem from="1730947728180" duration="49000" />
+      <workItem from="1730947838469" duration="4959000" />
+      <workItem from="1731031371060" duration="1941000" />
+      <workItem from="1731033508530" duration="1537000" />
+      <workItem from="1731038996668" duration="4214000" />
+      <workItem from="1731045052300" duration="52000" />
+      <workItem from="1731215919457" duration="276000" />
+      <workItem from="1731216682150" duration="1104000" />
     </task>
     <servers />
   </component>
@@ -129,6 +156,6 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/picture_editor$picture_editor.coverage" NAME="picture_editor Coverage Results" MODIFIED="1730118177253" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/picture_editor$picture_editor.coverage" NAME="picture_editor Coverage Results" MODIFIED="1730349671228" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>

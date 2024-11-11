@@ -1,69 +1,75 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
-from utils import create_ai_image_with_fal, remove_background_with_removebg
-from error_handler import ErrorHandler
 import os
-from dotenv import load_dotenv
+import uuid
+from flask import Flask, request, jsonify, url_for, send_file
+from utils import remove_background, generate_background, centerize_image, create_composite_image
 
-# 환경 변수 로드
-load_dotenv()
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 최대 16MB 설정 (필요에 따라 조정)
 
-app = Flask(__name__, static_folder='static')
-CORS(app)
 
-REMOVE_BG_API_KEY = os.getenv("REMOVE_BG_API_KEY")
-FAL_API_KEY = os.getenv("FAL_API_KEY")
+# 파일 저장 함수
+def save_image(image, folder):
+    unique_filename = f"{uuid.uuid4()}.png"
+    file_path = os.path.join(folder, unique_filename)
+    image.save(file_path)
+    return url_for('static', filename=unique_filename, _external=True)
 
-@app.route('/api/create_ai_image', methods=['POST'])
-def handle_image():
-    try:
-        if 'image' not in request.files:
-            return jsonify({'error': 'No image uploaded'}), 400
+# 단건 배경 제거 엔드포인트
+@app.route('/remove_background_single', methods=['POST'])
+def remove_background_single():
+    image = request.files['image']
+    result_image, _ = remove_background(image)
+    file_url = save_image(result_image, app.config['UPLOAD_FOLDER'])
+    return jsonify({"url": file_url})
 
-        image = request.files['image']
-        image_bytes = image.read()
-        print(f"Received file: {image.filename}, Size: {len(image_bytes)} bytes")
+# 벌크 배경 제거 엔드포인트
+@app.route('/remove_background_bulk', methods=['POST'])
+def remove_background_bulk():
+    # 전체 파일 요청을 로그로 출력하여 확인
+    print("Request files:", request.files)
 
-        # FAL API를 사용해 배경 제거 수행
-        result = create_ai_image_with_fal(image_bytes, "create ai image.", FAL_API_KEY)
+    images = request.files.getlist('images')
+    results = []
 
-        if result is None:
-            return jsonify({'error': 'create ai image failed'}), 500
+    if not images:
+        print("No images received")  # 이미지가 없는 경우 로그 출력
+    else:
+        print(f"Received {len(images)} images")  # 받은 이미지 개수 출력
 
-        # 성공적으로 결과 반환
-        return jsonify({'message': 'create ai image successfully', 'result': result}), 200
+    for image in images:
+        # 각각의 이미지를 처리하고 결과 저장
+        result_image, _ = remove_background(image)  # mask는 무시합니다.
 
-    except Exception as e:
-        print(f"Exception occurred: {str(e)}")
-        return jsonify({'error': f'create ai image failed: {str(e)}'}), 500
+        # 결과 이미지를 고유한 파일명으로 저장하고 URL 생성
+        file_url = save_image(result_image, app.config['UPLOAD_FOLDER'])
+        results.append({"url": file_url})
 
-@app.route('/api/remove_background', methods=['POST'])
-def remove_background():
-    try:
-        if 'image' not in request.files:
-            return ErrorHandler.client_error('No image uploaded')
+    # 모든 이미지 URL 리스트를 JSON으로 반환
+    print(f"Returning {len(results)} results")  # 처리된 결과 개수 출력
+    return jsonify(results)
 
-        image = request.files['image']
-        image_bytes = image.read()
-        print(f"Received file: {image.filename}, Size: {len(image_bytes)} bytes")
+# 단건 배경 생성 엔드포인트
+@app.route('/generate_background_single', methods=['POST'])
+def generate_background_single():
+    prompt = request.form.get('prompt', 'default background')
+    result_image = generate_background(prompt)
+    file_url = save_image(result_image, app.config['UPLOAD_FOLDER'])
+    return jsonify({"url": file_url})
 
-        if not REMOVE_BG_API_KEY:
-            return ErrorHandler.client_error('Remove.bg API key not configured', 500)
+# 벌크 배경 생성 엔드포인트
+@app.route('/generate_background_bulk', methods=['POST'])
+def generate_background_bulk():
+    prompt = request.form.get('prompt', 'default background')
+    images = request.files.getlist('images')
+    results = []
 
-        file_path = remove_background_with_removebg(image_bytes, REMOVE_BG_API_KEY)
+    for image in images:
+        result_image = generate_background(prompt)
+        file_url = save_image(result_image, app.config['UPLOAD_FOLDER'])
+        results.append({"url": file_url})
 
-        if file_path is None:
-            return ErrorHandler.client_error('remove_background failed', 500)
-
-        return jsonify({'message': 'Background removed successfully', 'url': file_path}), 200
-
-    except Exception as e:
-        return ErrorHandler.handle_exception(e, 'remove_background failed')
-
-# 정적 파일 제공 엔드포인트
-@app.route('/static/<path:filename>')
-def serve_static_file(filename):
-    return send_from_directory(app.static_folder, filename)
+    return jsonify(results)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
