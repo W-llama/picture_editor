@@ -43,6 +43,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# open ai
+save_models/
+model/
+static/
+
 # C extensions
 *.so
 
@@ -201,3 +206,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+!/.gitignore
