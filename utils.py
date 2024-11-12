@@ -9,8 +9,8 @@ from model import U2NET  # U2Net 모델 정의 파일 필요
 # U2Net 모델 로드
 model_path = "save_models/u2net.pth"
 u2net_model = U2NET(3, 1)  # U2Net 모델 객체 생성
-u2net_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 u2net_model.eval()
+u2net_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
 
 # Dreambooth 모델 경로 설정
 dreambooth_model_path = "save_models/dreambooth_model"
@@ -47,8 +47,8 @@ def postprocess_mask(mask, original_size):
     return mask
 
 # U2Net을 통한 배경 제거 (투명 배경)
-def remove_background(image):
-    pil_image = Image.open(image).convert("RGB")
+def remove_background(image_path):
+    pil_image = Image.open(image_path).convert("RGB")
     original_size = pil_image.size
     input_image = preprocess_image(pil_image)
 
@@ -62,9 +62,27 @@ def remove_background(image):
     data[:, :, 3] = mask  # 알파 채널에 마스크 적용해 투명도 설정
     transparent_image = Image.fromarray(data, "RGBA")
     return transparent_image, mask  # 투명 배경 이미지 반환
+# 벌크 이미지 배경 제거
+def bulk_remove_background(image_paths, output_folder):
+    os.makedirs(output_folder, exist_ok=True)
+    results = []
+
+    for image_path in image_paths:
+        try:
+            transparent_image, mask = remove_background(image_path)
+            output_path = os.path.join(output_folder, os.path.basename(image_path))
+            transparent_image.save(output_path, "PNG")
+            results.append((image_path, output_path))
+            print(f"Background removed for {image_path} and saved to {output_path}")
+        except Exception as e:
+            print(f"Failed to process {image_path}: {e}")
+
+    return results  # 처리된 이미지 목록 반환
 
 # Dreambooth를 통한 배경 생성
 def generate_background(prompt, size=(512, 512)):
     width, height = map(int, size)  # size 값을 정수로 변환하여 height와 width에 전달
     generated_image = dreambooth_pipeline(prompt, height=height, width=width).images[0]
     return generated_image
+
+
